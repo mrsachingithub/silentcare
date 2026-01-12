@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-5">
+                <h2 class="fw-bold mb-4 text-primary">Contact Us</h2>
+                <p class="text-muted mb-5">Have any questions or issues? Reach out to our support team.</p>
+
+                <div class="row mb-5">
+                    <div class="col-md-4 text-center mb-3">
+                        <h5 class="fw-bold">Email</h5>
+                        <p class="text-muted">support@silentcare.com</p>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <h5 class="fw-bold">Phone</h5>
+                        <p class="text-muted">+1 (555) 123-4567</p>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <h5 class="fw-bold">Office</h5>
+                        <p class="text-muted">New Delhi, India</p>
+                    </div>
+                </div>
+
+                <hr class="mb-5">
+
+                <h4 class="fw-bold mb-3">Send us a message</h4>
+                <form>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-control" placeholder="John Doe">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" placeholder="john@example.com">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Message</label>
+                        <textarea class="form-control" rows="5" placeholder="How can we help you?"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary px-4">Send Message</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

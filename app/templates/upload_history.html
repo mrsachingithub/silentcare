@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card p-4">
+            <h4 class="mb-3">Upload Historical Data <small class="text-muted">(Batch)</small></h4>
+            <div class="alert alert-info">
+                <small>CSV Format: department, patients_waiting, active_doctors, avg_consultation_time</small>
+            </div>
+
+            <form id="csv-upload-form">
+                <div class="mb-3">
+                    <input type="file" class="form-control" id="csvFile" accept=".csv" required>
+                </div>
+                <button type="submit" class="btn btn-secondary w-100">Upload & Retrain Model</button>
+            </form>
+
+            <div id="upload-feedback" class="mt-3"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Result Modal -->
+<div class="modal fade" id="resultModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Upload Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <div class="d-flex align-items-center">
+                    <div class="spinner-border text-primary me-3" role="status" id="loadingSpinner"></div>
+                    <span id="statusText">Processing...</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('csv-upload-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // Show Modal (Loading State)
+        const modalEl = document.getElementById('resultModal');
+        const modal = new bootstrap.Modal(modalEl);
+        const title = document.getElementById('modalTitle');
+        const body = document.getElementById('modalBody');
+        const spinner = document.getElementById('loadingSpinner');
+        const status = document.getElementById('statusText');
+
+        title.textContent = "Uploading & Training...";
+        spinner.style.display = "block";
+        status.textContent = "Please wait while we process the CSV and retrain the AI model...";
+        status.className = "text-muted";
+        modal.show();
+
+        const fileInput = document.getElementById('csvFile');
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        try {
+            const response = await fetch('/api/queue/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            spinner.style.display = "none";
+
+            if (response.ok) {
+                title.textContent = "Success!";
+                title.className = "modal-title text-success";
+                body.innerHTML = `
+                    <div class="text-center">
+                        <h1 class="display-4">✅</h1>
+                        <p class="lead">Processed <strong>${result.count}</strong> records.</p>
+                        <p class="text-success small">AI Model has been successfully retrained!</p>
+                    </div>
+                `;
+                fileInput.value = '';
+            } else {
+                title.textContent = "Upload Failed";
+                title.className = "modal-title text-danger";
+                body.innerHTML = `
+                    <div class="text-center">
+                        <h1 class="display-4">❌</h1>
+                        <p class="text-danger">${result.error}</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            spinner.style.display = "none";
+            title.textContent = "Network Error";
+            body.innerHTML = `<p class="text-danger">Failed to connect to server.</p>`;
+        }
+    });
+</script>
+{% endblock %}

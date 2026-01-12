@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Patient Dashboard <small class="text-muted">Welcome, {{ current_user.username }}</small></h2>
+    <span class="badge bg-light text-dark border">{{ now }}</span>
+</div>
+
+<!-- Department Stats Cards -->
+<div class="row g-4 mb-5">
+    {% for dept in departments %}
+    <div class="col-md-4">
+        <div class="card h-100 p-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0 fw-bold">{{ dept.name }}</h5>
+                <span class="badge {% if dept.is_crowded %}bg-danger{% else %}bg-success{% endif %}">
+                    {{ dept.crowd_status }}
+                </span>
+            </div>
+
+            <div class="row text-center g-2">
+                <div class="col-6">
+                    <div class="p-2 border rounded bg-light">
+                        <small class="text-muted">Wait Time</small>
+                        <div class="h4 mb-0 text-primary">{{ dept.wait_time }}</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="p-2 border rounded bg-light">
+                        <small class="text-muted">Active Docs</small>
+                        <div class="h4 mb-0 text-success">{{ dept.active_doctors }}</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="p-2 border rounded bg-light">
+                        <small class="text-muted">Queue</small>
+                        <div class="h5 mb-0">{{ dept.patients_waiting }}</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="p-2 border rounded bg-light">
+                        <small class="text-muted">Avg Time</small>
+                        <div class="h5 mb-0">{{ dept.avg_time }} m</div>
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+            <div>
+                <small class="text-muted d-block mb-1">Best Time to Visit:</small>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="fw-bold">{{ dept.best_slot }}</span>
+                    <button class="btn btn-sm btn-outline-primary check-slots-btn" data-dept="{{ dept.name }}"
+                        data-bs-toggle="modal" data-bs-target="#slotsModal">View All</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Recommendations Modal -->
+<div class="modal fade" id="slotsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Recommended Slots: <span id="modal-dept-name"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Wait</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modal-slots-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.querySelectorAll('.check-slots-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const dept = btn.dataset.dept;
+            document.getElementById('modal-dept-name').textContent = dept;
+            const tbody = document.getElementById('modal-slots-body');
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center">Loading...</td></tr>';
+
+            const resp = await fetch(`/api/analytics/forecast?department=${dept}`);
+            const data = await resp.json();
+
+            tbody.innerHTML = '';
+            data.slice(0, 8).forEach(slot => {
+                let badge = slot.intensity === 'Low' ? 'success' : (slot.intensity === 'Medium' ? 'warning' : 'danger');
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${slot.time}</td>
+                        <td>${slot.wait_time} min</td>
+                        <td><span class="badge bg-${badge}">${slot.intensity}</span></td>
+                    </tr>
+                `;
+            });
+        });
+    });
+</script>
+{% endblock %}

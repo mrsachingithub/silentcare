@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <!-- Manual Entry Section -->
+    <div class="col-md-6">
+        <div class="card p-4">
+            <h4 class="mb-3">Live Data Entry <small class="text-muted">(Real-time)</small></h4>
+            <p class="text-muted small">Use this form to instantly update the patient dashboard status.</p>
+
+            <form id="manual-entry-form">
+                <div class="mb-3">
+                    <label class="form-label">Department</label>
+                    <select class="form-select" id="department" required>
+                        <option value="General">General Medicine</option>
+                        <option value="Ortho">Orthopedics</option>
+                        <option value="ENT">ENT</option>
+                        <option value="Cardiology">Cardiology</option>
+                        <option value="Pediatrics">Pediatrics</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Patients Waiting</label>
+                    <input type="number" class="form-control" id="patients_waiting" min="0" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Active Doctors</label>
+                    <input type="number" class="form-control" id="active_doctors" min="0" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Avg Consultation Time (mins)</label>
+                    <input type="number" class="form-control" id="avg_consultation_time" min="1" step="0.1" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Update Status</button>
+            </form>
+            <div id="manual-feedback" class="mt-3"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Result Modal -->
+<div class="modal fade" id="liveEntryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="liveModalTitle">Update Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="liveModalBody">
+                <div class="d-flex align-items-center">
+                    <div class="spinner-border text-primary me-3" role="status" id="liveSpinner"></div>
+                    <span id="liveStatusText">Updating Dashboard...</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Manual Entry Handler
+    document.getElementById('manual-entry-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // Setup Modal
+        const modalEl = document.getElementById('liveEntryModal');
+        const modal = new bootstrap.Modal(modalEl);
+        const title = document.getElementById('liveModalTitle');
+        const body = document.getElementById('liveModalBody');
+        const spinner = document.getElementById('liveSpinner');
+        const status = document.getElementById('liveStatusText');
+
+        title.textContent = "Updating System...";
+        title.className = "modal-title";
+        spinner.style.display = "block";
+        status.textContent = "Broadcasting live update...";
+        modal.show();
+
+        try {
+            const data = {
+                department: document.getElementById('department').value,
+                patients_waiting: parseInt(document.getElementById('patients_waiting').value),
+                active_doctors: parseInt(document.getElementById('active_doctors').value),
+                avg_consultation_time: parseFloat(document.getElementById('avg_consultation_time').value)
+            };
+
+            const response = await fetch('/api/queue/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            spinner.style.display = "none";
+
+            if (response.ok) {
+                title.textContent = "Update Successful";
+                title.className = "modal-title text-success";
+                body.innerHTML = `
+                    <div class="text-center">
+                        <h1 class="display-4">✅</h1>
+                        <p class="lead">Dashboard Updated!</p>
+                        <p class="small text-muted">ID: ${result.id}</p>
+                    </div>
+                `;
+                document.getElementById('patients_waiting').value = '';
+            } else {
+                title.textContent = "Update Failed";
+                title.className = "modal-title text-danger";
+                body.innerHTML = `
+                    <div class="text-center">
+                        <h1 class="display-4">❌</h1>
+                        <p class="text-danger">${result.error}</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            spinner.style.display = "none";
+            title.textContent = "Network Error";
+            body.innerHTML = `<p class="text-danger">Failed to connect to server.</p>`;
+        }
+    });
+</script>
+{% endblock %}

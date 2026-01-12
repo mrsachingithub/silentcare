@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section text-center rounded-3 mb-5">
+    <div class="container">
+        <h1 class="hero-title">Intelligent OPD Management<br>For Modern Hospitals</h1>
+        <p class="hero-subtitle mb-5">Predict wait times, detect silent operational issues, and optimize<br>daily
+            operations with AI-driven analytics.</p>
+
+    </div>
+</section>
+
+<!-- Features Grid -->
+<div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+    <div class="col">
+        <div class="card h-100 p-4 text-center">
+            <div class="feature-icon">⏳</div>
+            <h3>Smart Prediction</h3>
+            <p class="text-muted">AI models forecast waiting times with high accuracy using historical patterns and
+                real-time load.</p>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card h-100 p-4 text-center">
+            <div class="feature-icon">🚨</div>
+            <h3>Silent Detection</h3>
+            <p class="text-muted">Automatically identify "silent" operational bottlenecks and staff shortages before
+                they escalate.</p>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card h-100 p-4 text-center">
+            <div class="feature-icon">📊</div>
+            <h3>Peak Analytics</h3>
+            <p class="text-muted">Visualize peak hours with heatmaps to optimize doctor shifts and resource allocation.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

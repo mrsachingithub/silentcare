@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="text-center mt-5">
+    <h1 class="display-4">Check OPD Status & Best Time</h1>
+    <p class="lead">Plan your visit to minimize waiting time.</p>
+</div>
+
+<div class="row mt-4 justify-content-center">
+    <div class="col-md-5">
+        <div class="card p-4">
+            <h5 class="mb-3">Select Department</h5>
+            <form id="check-form">
+                <div class="mb-3">
+                    <select class="form-select" id="department">
+                        <option value="General">General Medicine</option>
+                        <option value="Ortho">Orthopedics</option>
+                        <option value="ENT">ENT</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Find Best Slots</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4 justify-content-center" id="result-section" style="display:none;">
+    <div class="col-md-8">
+        <h4 class="mb-3">Recommended Visiting Hours</h4>
+        <div class="table-responsive">
+            <table class="table table-hover bg-white shadow-sm rounded">
+                <thead class="table-light">
+                    <tr>
+                        <th>Time Slot</th>
+                        <th>Predicted Wait</th>
+                        <th>Crowd Level</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="slots-body">
+                    <!-- Populated via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('check-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const dept = document.getElementById('department').value;
+        const resultSection = document.getElementById('result-section');
+        const tbody = document.getElementById('slots-body');
+
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center">Analyzing historical data...</td></tr>';
+        resultSection.style.display = 'block';
+
+        try {
+            const resp = await fetch(`/api/analytics/forecast?department=${dept}`);
+            const data = await resp.json();
+
+            tbody.innerHTML = '';
+
+            // Limit to next 8 slots for better UX
+            data.slice(0, 8).forEach(slot => {
+                let badgeClass = 'bg-secondary';
+                if (slot.intensity === 'Low') badgeClass = 'bg-success';
+                if (slot.intensity === 'Medium') badgeClass = 'bg-warning text-dark';
+                if (slot.intensity === 'High') badgeClass = 'bg-danger';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${slot.time}</strong></td>
+                    <td>${slot.wait_time} min</td>
+                    <td><span class="badge ${badgeClass}">${slot.intensity}</span></td>
+                    <td>${slot.intensity === 'Low' ? '✅ Recommended' : ''}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+        } catch (err) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-danger">Failed to load predictions.</td></tr>';
+        }
+    });
+</script>
+{% endblock %}
