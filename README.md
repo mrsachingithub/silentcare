@@ -2,7 +2,6 @@
 
 A healthcare queue management and analytics system.
 
-A healthcare queue management and analytics system.
 
 ## Features
 
